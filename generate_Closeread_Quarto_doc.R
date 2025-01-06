@@ -106,7 +106,12 @@ generate_one_sticky <- function(sticky_name, sticky_type, sticky_text) {
   
   } else if (sticky_type == "Text") {
 
-    sticky_content <- paste0("| ", gsub("\n", "\n| ", sticky_text))
+    if (is.na(sticky_text) || sticky_text == "") {
+      sticky_content <- ""
+    } else {
+      sticky_content <- paste0("| ", gsub("\n", "\n| ", sticky_text))
+    }
+    
     
   } else if ( (sticky_type == "RCode") | (sticky_type == "R Code")) {
     

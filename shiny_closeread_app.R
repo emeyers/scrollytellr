@@ -144,7 +144,7 @@ ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage(
             
             # will need to dynamically generate the list of stickies based on what has been added
             selectInput(inputId = "NarrationSticky", label = "Select Sticky", 
-                        choices = c("No stickies created yet (blank?)")),
+                        choices = c("No stickies created yet")),
             
             
             textAreaInput(
@@ -253,29 +253,60 @@ server <- function(input, output, session) {
   observeEvent(input$AddSticky, {
   
     
-    # Check that the sticky name doesn't already exist
+    # Check that the sticky name doesn't already exist, and is not empty
     
     if (input$StickyName %in% stickies_df$name) {
-      #print("A sticky with that name already exists :(")
       shinyalert("A sticky with that name already exists", 
                  "Please pick a unique sticky name", 
                  type = "info")
     }
-    
     validate(
       need(!(input$StickyName %in% stickies_df$name), 
            message = "A sticky with that name already exists. Please pick a unique sticky name.")
     )
+
+    
+    if (input$StickyName == "") {
+      shinyalert("No sticky name given", 
+                 "You must supply a name for the sticky", 
+                 type = "info")
+    }
+    validate(
+      need(input$StickyName != "", 
+           message = "No sticky name supplied.")
+    )
+    
     
 
     # need to do things conditionally depending on whether text or an image...
   
     if (input$StickyType == "Image") {
+      
       #input$ImageUpload$name
+      
+      if(is.null(input$ImageUpload$name)) {  
+        # alternatively could use:  if(is.null(input$ImageUpload$ImageUpload$datapath))   
+        
+        shinyalert("Please upload an image", 
+                   "An image must be uploaded prior to adding the sticky", 
+                   type = "info")
+        
+        validate(
+          need(!(is.null(input$ImageUpload$name)), 
+               message = "An image must be uploaded prior to adding the sticky.")
+        )
+        
+        
+      }
+      
       curr_text <- input$ImageUpload$datapath
-    } else {
+      
+  
+    } else {  # not an image (i.e., R code or text)
+    
       curr_text <- input$StickyContent
       updateTextInput(session, "StickyContent", value = "")   # Clear the text once the stikcy has been added
+    
     }
     
     
@@ -369,6 +400,20 @@ server <- function(input, output, session) {
   # if AddSticky button is pressed
   observeEvent(input$AddNarration, {
     
+    # if no stickies have been created yet, do not allow one to add narrations
+    if (nrow(stickies_df) == 0) {
+      
+      shinyalert("No stickies exist yet", 
+                 "You need to first create a sticky before you can add narrations.", 
+                 type = "info")
+      
+      validate(
+        need((nrow(stickies_df) != 0), 
+             message = "You need to first create a sticky before you can add narrations.")
+      )
+
+    }
+    
     curr_narration_df <- data.frame(sticky = input$NarrationSticky,
                                     text = input$NarrationText,
                                     options = input$NarrationStickyOptions)
@@ -440,6 +485,16 @@ server <- function(input, output, session) {
   # Display Quarto text in a Shiny Ace editor  (use either this, or QuartoText but not both)
   output$DisplayQuartoDoc <- renderUI({ 
     
+    
+    # if no narrations have been created yet, can't render the Quarto document
+    if (nrow(narration_df) == 0) {
+      validate(
+        need((nrow(narration_df) != 0), 
+             message = "\n\nYou need to first add narrations before you can generate a Quarto document")
+      )
+    }
+    
+    
     create_header_list(input)
     
     #quarto_text <- generate_Closeread_Quarto_doc(narration_df, stickies_df, header_list)
@@ -464,6 +519,15 @@ server <- function(input, output, session) {
     
     # make sure the html document is regenerated every time the narration_df changes
     #narration_df_reactive() 
+    
+    # if no narrations have been created yet, can't render the HTML document
+    if (nrow(narration_df) == 0) {
+      validate(
+        need((nrow(narration_df) != 0), 
+             message = "\n\nYou need to first add narrations before you can generate an HTML document")
+      )
+    }
+    
     
     create_header_list(input)
     
