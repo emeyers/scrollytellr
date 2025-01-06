@@ -47,3 +47,10 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+
+# Added by Ethan
+closeread_doc.qmd
+closeread_doc.html
+
+
