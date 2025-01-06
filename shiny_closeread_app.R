@@ -24,6 +24,27 @@ create_header_list <- function(input) {
 }
 
 
+# function to generate code for reordering rows in the narration DT table
+generate_js_reorder_rows_code <- function(the_df, new_order_variable_name) {
+  
+  input_val_string <- paste0("  Shiny.setInputValue('", new_order_variable_name,  "', order);")
+  
+  js <- c(
+    "table.on('row-reorder', function(e, details, edit) {",
+    sprintf("  var order = [%s];", toString(0:(nrow(the_df)-1))),
+    "  for(entry of details) {",
+    "    order[entry.newPosition] = entry.oldPosition;",
+    "  }", 
+    input_val_string,
+    "});"
+  )
+  
+  js
+  
+}
+
+
+
 
 
 # 1. The function to create the user interface
@@ -148,7 +169,8 @@ ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage(
             
             # print a table of stickies that exist
             #tableOutput('ShowNarrations')
-            DTOutput('ShowNarrationsDT')
+            DTOutput('ShowNarrationsDT'),
+            actionButton("deleteNarrationRows", "Delete highlighted narrations")
             
             )
           
@@ -298,24 +320,6 @@ server <- function(input, output, session) {
   
   
   
-  # if AddSticky button is pressed
-  observeEvent(input$AddNarration, {
-    
-    
-    curr_narration_df <- data.frame(text = input$NarrationText, 
-                              sticky = input$NarrationSticky,
-                              options = input$NarrationStickyOptions)
-    
-    
-    # Clear the text once the narration has been added
-    updateTextInput(session, "NarrationText", value = "") 
-    
-    narration_df <<- rbind(narration_df, curr_narration_df)
-    
-    
-  })
-  
-  
   # display of the narration table 
   #output$ShowNarrationsBasic <- renderTable({
   #  input$AddNarration # update every time a sticky is added
@@ -324,26 +328,112 @@ server <- function(input, output, session) {
   
   
   # display of the stickies table - using a DataTable which is editable, etc.
+  # first simple version of this
+  #output$ShowNarrationsDT <- renderDT({
+  #  input$AddNarration # update every time a sticky is added
+  #  datatable(narration_df, escape = FALSE, selection = "none",
+  #            options = list(dom = 't'))
+  #})
+  
+  
   output$ShowNarrationsDT <- renderDT({
-    input$AddNarration # update every time a sticky is added
-    datatable(narration_df, escape = FALSE, selection = "none",
-              options = list(dom = 't'))
+    
+    # need to change narrationNewOrder, ShowNarrationsDT, and narration_df
+    # to work with other data frames...
+    
+    #input$AddNarration  # update every time the AddNarration is pressed
+    
+    js <- generate_js_reorder_rows_code(narration_df, "narrationNewOrder")
+    
+    the_data_table <- datatable(
+      #narration_df,
+      narration_df_reactive(),
+      rownames = FALSE,
+      extensions = "RowReorder",
+      callback = JS(js),
+      options = list(rowReorder = TRUE, dom = 't', ordering=F),
+      editable = TRUE)  # can edit the values in the table
+    
+    the_data_table
+   
+  }, server = TRUE)  # end renderDT
+  
+  
+  
+  # additional code to get the row order to rearrange
+  proxy <- dataTableProxy("ShowNarrationsDT")
+  narration_df_reactive <- reactiveVal(narration_df)
+  
+  
+  # if AddSticky button is pressed
+  observeEvent(input$AddNarration, {
+    
+    curr_narration_df <- data.frame(sticky = input$NarrationSticky,
+                                    text = input$NarrationText,
+                                    options = input$NarrationStickyOptions)
+    
+    # clear the text once the narration has been added
+    updateTextInput(session, "NarrationText", value = "") 
+    
+    narration_df <<- rbind(narration_df, curr_narration_df)
+    
+    # update the visual display of the table    
+    replaceData(proxy, narration_df, resetPaging = FALSE, rownames = FALSE)
+    narration_df_reactive(narration_df)
+    
   })
+  
+  
+  
+  # for reordering the narration table 
+  observeEvent(input$narrationNewOrder, {
+    narration_df_original <- narration_df_reactive()
+    narration_df_reordered <- narration_df_original[input$narrationNewOrder + 1, ]
+    replaceData(proxy, narration_df_reordered, resetPaging = FALSE, rownames = FALSE)
+    narration_df_reactive(narration_df_reordered)
+    narration_df <<- narration_df_reordered
+  })
+  
+  
+  # for deleting rows from the narration table (narration data frame)
+  observeEvent(input$deleteNarrationRows,{
+    
+    if (!is.null(input$ShowNarrationsDT_rows_selected)) {
+      
+      narration_df <<- narration_df[-as.numeric(input$ShowNarrationsDT_rows_selected),]
+      
+      # update the visual display of the table    
+      replaceData(proxy, narration_df, resetPaging = FALSE, rownames = FALSE)
+      narration_df_reactive(narration_df)
+    }
+    
+  })
+  
+  
+  # for when a cell in the narration data table/frame is edited
+  observeEvent(input$ShowNarrationsDT_cell_edit, {
+    
+    row  <- input$ShowNarrationsDT_cell_edit$row
+    clmn <- input$ShowNarrationsDT_cell_edit$col + 1  # not sure why I need to add 1 here, but ok
+    narration_df[row, clmn] <<- input$ShowNarrationsDT_cell_edit$value
+
+    narration_df_reactive(narration_df)
+    
+    print(narration_df)
+    
+  })
+  
   
   
   
   
   
   # Display Quarto text (use either this, or DisplayQuartoDoc but not both)
-  output$QuartoText <- renderText({
-    
-    create_header_list(input)
-    
-    quarto_text <- generate_Closeread_Quarto_doc(narration_df, stickies_df, header_list)
-    
-    quarto_text
-    
-  })
+  # output$QuartoText <- renderText({
+  #  create_header_list(input)
+  #  quarto_text <- generate_Closeread_Quarto_doc(narration_df, stickies_df, header_list)
+  #  quarto_text
+  #})
   
   
   # Display Quarto text in a Shiny Ace editor  (use either this, or QuartoText but not both)
@@ -351,7 +441,10 @@ server <- function(input, output, session) {
     
     create_header_list(input)
     
-    quarto_text <- generate_Closeread_Quarto_doc(narration_df, stickies_df, header_list)
+    #quarto_text <- generate_Closeread_Quarto_doc(narration_df, stickies_df, header_list)
+    quarto_text <- generate_Closeread_Quarto_doc(narration_df_reactive(), 
+                                                 stickies_df, 
+                                                 header_list)
     
     ace_editor <- shinyAce::aceEditor("DisplayQuartoDoc",
                                       quarto_text,
@@ -368,6 +461,9 @@ server <- function(input, output, session) {
   # When HTML tab is entered run this code
   output$ClosereadOutput <- renderUI({
     
+    # make sure the html document is regenerated every time the narration_df changes
+    #narration_df_reactive() 
+    
     create_header_list(input)
     
     html_output <- getClosereadPage()
@@ -379,7 +475,11 @@ server <- function(input, output, session) {
   
   getClosereadPage <- function() {
     
-    quarto_text <- generate_Closeread_Quarto_doc(narration_df, stickies_df, header_list)
+    #quarto_text <- generate_Closeread_Quarto_doc(narration_df, stickies_df, header_list)
+    quarto_text <- generate_Closeread_Quarto_doc(narration_df_reactive(), 
+                                                 stickies_df, 
+                                                 header_list)
+    
     
     writeLines(quarto_text, "closeread_doc.qmd")
     
