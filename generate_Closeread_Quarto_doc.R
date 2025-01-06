@@ -151,8 +151,10 @@ generate_header <- function(header_list) {
 #       narrative-text-color-overlay: "#e2e2e2"
 # ---\n'
   
-  if (is.null(header_list$title)) {
-    header_list$title <- "Default title"
+  if (is.null(header_list$title) || header_list$title == "") {
+    title_line <- "\n"
+  } else {
+    title_line <- paste0('title: ', header_list$title, '\n')
   }
   
   if (is.null(header_list$layout)) {
@@ -171,16 +173,16 @@ generate_header <- function(header_list) {
   
 
   header <- paste0('
----
-title: ', header_list$title, '\n',
+---',
+title_line,
 'format:
   closeread-html:
     embed-resources: true
     cr-section:
       layout: "', header_list$layout, '"', '\n',
-    'cr-style:
-      narrative-background-color-overlay: ', header_list$narrative_background_color_overlay, '\n',
-      'narrative-text-color-overlay: ', header_list$header_list$narrative_text_color_overlay, '\n',
+'    cr-style:
+       narrative-background-color-overlay: ', header_list$narrative_background_color_overlay, '\n',
+'       narrative-text-color-overlay: ', header_list$header_list$narrative_text_color_overlay, '\n',
 '---\n')
   
   

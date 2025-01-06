@@ -21,6 +21,7 @@ header_list <- list()
 create_header_list <- function(input) {
   header_list$title <<- input$DocumentTitle
   header_list$layout <<-input$DocumentLayout
+  header_list
 }
 
 
