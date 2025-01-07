@@ -52,7 +52,7 @@ generate_js_reorder_rows_code <- function(the_df, new_order_variable_name) {
 ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage( 
   
   
-  navset_tab(
+  navset_tab(id = "MainMenu",
     
     
     
@@ -221,14 +221,9 @@ ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage(
     
     
     
-    nav_spacer(),
+    # Downloads tab will be added dynamically when narration_df is not an emtpy data frame
     
     
-    nav_menu(
-      title = "Links",
-      nav_item("link_shiny"),
-      nav_item("link_posit")
-    )
   )
 
 
@@ -243,10 +238,33 @@ ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage(
 # 2. The function to create the server
 server <- function(input, output, session) {
   
+
+  observeEvent(narration_df_reactive(), {
+
+    nav_remove("MainMenu", target = "Downloads")
+    
+    if (nrow(narration_df) > 0) {
+      
+      nav_insert(
+        "MainMenu", target = "HTML output",
+        nav_menu("Downloads", 
+                  nav_spacer(),
+                  nav_item(downloadButton("downloadQuarto", "Download Quarto Document")),
+                  nav_spacer(),
+                  nav_item(downloadButton("downloadHTML", "Download HTML Page"))
+                 
+                 # should also add an item to save the stickies_df, narration_df, header_list
+                 # so that they can be reloaded into the app...
+                  
+        ) # end nav_panel
+        
+      ) # end insert Downloads tab
+      
+    } 
+
   
-  output$my_plot <- renderPlot({
-    hist(rnorm(input$num)) 
   })
+  
   
   
   # if AddSticky button is pressed
@@ -568,6 +586,65 @@ server <- function(input, output, session) {
   }
   
     
+  # Code to download the Quarto and HTML documents
+  
+  output$downloadQuarto <- downloadHandler(
+    filename = "closeread_doc.qmd",   # can give any name here
+    content = function(file) {
+      file.copy("closeread_doc.qmd", file)
+    }
+  )
+  
+  
+  
+  output$downloadHTML <- downloadHandler(
+    
+    filename = function() {
+      
+      # if (nrow(narration_df) == 0) { 
+      #   
+      #   shinyalert("Can't create an HTML document yet", 
+      #            "You need to add narrations before you can create and save an HTML document", 
+      #            type = "info")
+      #   
+      #   validate(
+      #          need((nrow(narration_df) != 0), 
+      #               message = "\n\nYou need to first add narrations before you can generate an HTML document")
+      #        )
+      #   
+      # }
+      
+      "closeread_doc.html"   # can give any name for this file
+      
+    },  
+    
+    
+    content = function(file) {
+      
+      print("outside")
+      
+      # check that narrations have been added before trying to generate webpage
+      # if (nrow(narration_df) == 0) {
+      #   
+      #   shinyalert("Can't create an HTML document yet", 
+      #              "You need to add narrations before you can save an HTML document", 
+      #              type = "info")
+      #   
+      #   
+      #   validate(
+      #     need((nrow(narration_df) != 0), 
+      #          message = "\n\nYou need to first add narrations before you can generate an HTML document")
+      #   )
+      #   
+      # }
+      
+      # create the close read html document
+      getClosereadPage()
+      
+      file.copy("closeread_doc.html", file)
+    }
+  )
+  
 
   
   
