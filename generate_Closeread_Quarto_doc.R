@@ -159,35 +159,23 @@ generate_header <- function(header_list) {
   if (is.null(header_list$title) || header_list$title == "") {
     title_line <- "\n"
   } else {
-    title_line <- paste0('title: ', header_list$title, '\n')
+    title_line <- paste0('\ntitle: ', header_list$title, '\n')
   }
   
-  if (is.null(header_list$layout)) {
-    header_list$layout <- "overlay-left"
-  }
-  
-  if (is.null(header_list$narrative_background_color_overlay)) {
-    header_list$narrative_background_color_overlay <- "darkslategrey"
-  }
-  
-  if (is.null(header_list$narrative_text_color_overlay)) {
-    header_list$header_list$narrative_text_color_overlay <- "white"
-  }
-  
-  
+  # if (is.null(header_list$layout)) {
+  #   header_list$layout <- "overlay-left"
+  # }
   
 
-  header <- paste0('
----',
-title_line,
+  
+header <- paste0('---', title_line,
 'format:
   closeread-html:
     embed-resources: true
     cr-section:
       layout: "', header_list$layout, '"', '\n',
-'    cr-style:
-       narrative-background-color-overlay: ', header_list$narrative_background_color_overlay, '\n',
-'       narrative-text-color-overlay: ', header_list$header_list$narrative_text_color_overlay, '\n',
+'    cr-style:\n',
+get_all_header_style_strings(header_list),
 '---\n')
   
   
@@ -198,6 +186,91 @@ title_line,
 
 
 
+
+get_single_header_style_string <- function(header_string_type, header_list) {
+  
+  property_val <- eval(parse(text=paste0("header_list$", gsub("-", "_", header_string_type))))
+  
+  if (is.null(property_val)) {
+    return("")
+  }
+    
+  # will not put quotes around color names like "white" but will put quotes 
+  # around RGB values like "#e2e2e2"
+  if (!(property_val %in% colors())) {
+    property_in_quotes <- TRUE
+  } else {
+    property_in_quotes <- FALSE
+  }
+  
+  if (property_in_quotes) {
+    header_string <-   paste0('       ',  header_string_type, ': ',  "'", property_val, "'", "\n")
+  } else {
+    header_string <-   paste0('       ', header_string_type, ': ',  property_val, "\n")
+  }
+     
+  
+  header_string
+}
+
+
+
+get_all_header_style_strings <- function(header_list) {
+  
+  # could generate this list automatically if I use better header_list naming conventions
+  # e.g., use header$style_narrative_background_color_overlay and then strip off style part of name
+  header_string_names <- c("narrative-background-color-overlay", 
+                           "narrative-background-color-sidebar", 
+                           "narrative-text-color-overlay", 
+                           "narrative-text-color-sidebar",
+                           "section-background-color",
+                           "narrative-font-family", 
+                           "poem-font-family", 
+                           "narrative-font-size",
+                           "narrative-sidebar-width")
+  
+  all_header_style_strings <- ""
+  
+  for (curr_header_type in header_string_names) {
+    all_header_style_strings <- paste0(all_header_style_strings, 
+          get_single_header_style_string(curr_header_type, header_list))
+  }
+  
+  all_header_style_strings
+}
+
+
+
+
+
+
+# test code...
+
+
+# narration_df <- data.frame(text = c("Check out our graphic",
+#                                     "We can keep referring to it as several triggers scroll by",
+#                                     "Here's an image"),
+#                            sticky = c("mygraphic", "mygraphic", "mypic"),
+#                            options = "")
+# 
+# 
+# 
+# stickies_df <- data.frame(name = c("mygraphic", "mypic"),
+#                           type = c("RCode", "Image"),
+#                           text = c("hist(rexp(150))
+#                          hist(rexp(100))",
+#                                    "ants.png"))
+# 
+# 
+# header_list <- list()
+# header_list$title <- "The title"
+# header_list$layout <- "overlay-left"
+# header_list$narrative_background_color_overlay <- "darkslategrey"
+# header_list$narrative_text_color_overlay <- "white"
+# 
+# 
+# generated_text <- generate_Closeread_Quarto_doc(narration_df, stickies_df, header_list)
+# generated_text
 
 
 

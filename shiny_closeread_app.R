@@ -8,6 +8,11 @@ library(quarto)
 library(shinyAce)  # for displaying the Quarto script
 library(shinyalert)  # for popup messages
 library(DT)  # to show data tables that are editable, etc.
+library(colourpicker)
+
+library(systemfonts)
+font_info_df <- system_fonts()
+font_names <- sort(font_info_df$name)
 
 
 # code for converting the three data frames below into a Quarto Closeread doc
@@ -18,9 +23,25 @@ stickies_df <- data.frame()
 narration_df <- data.frame()
 header_list <- list()
 
+
 create_header_list <- function(input) {
+  
   header_list$title <<- input$DocumentTitle
   header_list$layout <<-input$DocumentLayout
+  header_list$narrative_text_color_overlay <<- input$header_narrative_text_color
+  header_list$narrative_text_color_sidebar <<- input$header_narrative_text_color
+  header_list$narrative_background_color_overlay <<- input$header_narrative_background_color
+  header_list$narrative_background_color_sidebar <<- input$header_narrative_background_color
+  header_list$section_background_color <<- input$header_section_background_color
+  header_list$narrative_font_family <<- input$header_narrative_font
+  header_list$poem_font_family <<- input$header_poem_font
+  header_list$narrative_font_size <<- paste0(input$header_narrative_font_size, 'pt')
+
+  #header_list$poem_font_size <<- paste0(input$header_poem_font_size, 'pt')  # not a Closeread option :(
+  
+  header_list_reactive <- reactiveVal(header_list)
+  header_list_reactive <- header_list_reactive(header_list)
+  
   header_list
 }
 
@@ -43,7 +64,6 @@ generate_js_reorder_rows_code <- function(the_df, new_order_variable_name) {
   js
   
 }
-
 
 
 
@@ -90,7 +110,7 @@ ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage(
               textAreaInput(
                 inputId = "StickyContent",
                 label = "Sticky Conent",
-                height = "300px",
+                height = "250px",
                 placeholder = "Add your sticky content here")
             ),
             
@@ -186,16 +206,33 @@ ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage(
     
     nav_panel(title = "Set Appearance", {
       
-      list(
+      header_UI_elements <- list(
         
         textInput("DocumentTitle", label = "Title"),       # value = "", width = NULL, placeholder = NULL)
       
-        selectInput("DocumentLayout", "Layout", choices = c("sidebar-left", "sidebar-right", "overlay-left",
-                                                          "overlay-center", "overlay-right"))
+        colourInput("header_narrative_text_color", "Narrative Text Color", "white"),
+        
+        selectInput("DocumentLayout", "Layout", choices = c("overlay-left", "overlay-center", "overlay-right",
+                                                            "sidebar-left", "sidebar-right")),
+        colourInput("header_narrative_background_color", "Narrative Background Color", "darkgreen"),
+        colourInput("header_section_background_color", "Section Background Color", "gray"),
+        selectInput("header_narrative_font", "Narrative font", choices = font_names, selectize=FALSE, selected = "Helvetica"),
+        selectInput("header_poem_font", "Poem font", choices = font_names, selectize=FALSE, selected = "Helvetica"),
+        numericInput("header_narrative_font_size", "Narrative font size", 12)
+
       )  # end list
         
+      
+      fluidRow(
+        lapply(
+          X = split(header_UI_elements, f = rep(c(1, 2), length.out = length(header_UI_elements))),
+          FUN = column, width = 6
+        )
+      )
+      
+      
+      
     }), # end appearance panel
-    
     
     
     nav_panel(title = "Quarto Documenent", {
@@ -212,16 +249,13 @@ ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage(
       
       list(
         
-        htmlOutput(outputId = "ClosereadOutput"), 
+        htmlOutput(outputId = "ClosereadOutput")
         
-        actionButton(inputId = "DownloadHTML", label = "Download HTML file") 
-        
-      
     )}), # end HTML output panel
     
     
     
-    # Downloads tab will be added dynamically when narration_df is not an emtpy data frame
+    # Downloads tab will be added dynamically when narration_df is not an empty data frame
     
     
   )
@@ -235,8 +269,16 @@ ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage(
 
 
 
+##############################   Server   ##################
+
+
+
+
 # 2. The function to create the server
 server <- function(input, output, session) {
+  
+  
+  header_list_reactive <- reactiveVal(header_list)
   
 
   observeEvent(narration_df_reactive(), {
@@ -414,7 +456,6 @@ server <- function(input, output, session) {
   proxy <- dataTableProxy("ShowNarrationsDT")
   narration_df_reactive <- reactiveVal(narration_df)
   
-  
   # if AddSticky button is pressed
   observeEvent(input$AddNarration, {
     
@@ -489,9 +530,6 @@ server <- function(input, output, session) {
   
   
   
-  
-  
-  
   # Display Quarto text (use either this, or DisplayQuartoDoc but not both)
   # output$QuartoText <- renderText({
   #  create_header_list(input)
@@ -514,11 +552,13 @@ server <- function(input, output, session) {
     
     
     create_header_list(input)
-    
+
     #quarto_text <- generate_Closeread_Quarto_doc(narration_df, stickies_df, header_list)
     quarto_text <- generate_Closeread_Quarto_doc(narration_df_reactive(), 
                                                  stickies_df, 
                                                  header_list)
+    
+    header_list_reactive()
     
     ace_editor <- shinyAce::aceEditor("DisplayQuartoDoc",
                                       quarto_text,
@@ -548,6 +588,7 @@ server <- function(input, output, session) {
     
     
     create_header_list(input)
+    header_list_reactive()
     
     html_output <- getClosereadPage()
     
@@ -600,43 +641,11 @@ server <- function(input, output, session) {
   output$downloadHTML <- downloadHandler(
     
     filename = function() {
-      
-      # if (nrow(narration_df) == 0) { 
-      #   
-      #   shinyalert("Can't create an HTML document yet", 
-      #            "You need to add narrations before you can create and save an HTML document", 
-      #            type = "info")
-      #   
-      #   validate(
-      #          need((nrow(narration_df) != 0), 
-      #               message = "\n\nYou need to first add narrations before you can generate an HTML document")
-      #        )
-      #   
-      # }
-      
       "closeread_doc.html"   # can give any name for this file
-      
     },  
     
     
     content = function(file) {
-      
-      print("outside")
-      
-      # check that narrations have been added before trying to generate webpage
-      # if (nrow(narration_df) == 0) {
-      #   
-      #   shinyalert("Can't create an HTML document yet", 
-      #              "You need to add narrations before you can save an HTML document", 
-      #              type = "info")
-      #   
-      #   
-      #   validate(
-      #     need((nrow(narration_df) != 0), 
-      #          message = "\n\nYou need to first add narrations before you can generate an HTML document")
-      #   )
-      #   
-      # }
       
       # create the close read html document
       getClosereadPage()
