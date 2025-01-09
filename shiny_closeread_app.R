@@ -68,6 +68,7 @@ generate_js_reorder_rows_code <- function(the_df, new_order_variable_name) {
 
 
 
+
 # 1. The function to create the user interface
 ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage( 
   
@@ -174,7 +175,7 @@ ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage(
               placeholder = "Add your narration text here"),
             
             # Additional sticky selection options
-            textInput(inputId = "NarrationStickyOptions", label = "Sticky Options"),
+            #textInput(inputId = "NarrationStickyOptions", label = "Sticky Options"),
             
             
             # Add the sticky to the list/data frame of stickies
@@ -193,7 +194,50 @@ ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage(
             DTOutput('ShowNarrationsDT'),
             actionButton("deleteNarrationRows", "Delete highlighted narrations")
             
+            ),
+          
+          
+          card(
+            accordion(
+              accordion_panel("Narration Options",
+                              
+                              layout_columns(
+                                
+                                card("Options",
+                                     
+                                     # Need to make this conditional depending on the type of sticky
+                                     
+                                     # For images...
+                                     
+
+                                     shinyWidgets::sliderTextInput("NarrationOptionsScale", "Scale",
+                                                                   choices=c(0, .25, .5, .75, 1, 1.5, 2, 2.5, seq(3, 10)),
+                                                                   selected=1, grid = T),
+                                     
+                                     sliderInput(inputId = "NarrationOptionsPanHorizontal", 
+                                                 label = "Pan horizontal", min = -100, max = 100, value = 0),
+                                     
+                                     sliderInput(inputId = "NarrationOptionsPanVertical", 
+                                                 label = "Pan vertical", min = -100, max = 100, value = 0)
+                                     
+                                ),
+                                
+                                card("Preview",
+                                     
+                                     # Add a generate preview button here...
+                                     htmlOutput(outputId = "PreviewOutput")
+                                     
+                                )
+                                
+                              ) # end layout_columns
+                              
+                              
+
+                              
+              )
             )
+          ),
+          col_widths = c(6, 6, 12)
           
           
         )
@@ -475,7 +519,8 @@ server <- function(input, output, session) {
     
     curr_narration_df <- data.frame(sticky = input$NarrationSticky,
                                     text = input$NarrationText,
-                                    options = input$NarrationStickyOptions)
+                                    options = get_narration_options())
+                                    #options = input$NarrationStickyOptions)
     
     # clear the text once the narration has been added
     updateTextInput(session, "NarrationText", value = "") 
@@ -527,6 +572,21 @@ server <- function(input, output, session) {
     print(narration_df)
     
   })
+  
+  
+  # helper function to get a string of the narration options
+  get_narration_options <- function() {
+    
+    options_string <- paste0("pan-to=", input$NarrationOptionsPanHorizontal, "%,",
+                             input$NarrationOptionsPanVertical, "%",
+                             " scale-by=", input$NarrationOptionsScale)
+    
+    options_string
+    
+  }
+  
+  
+  
   
   
   
@@ -590,41 +650,79 @@ server <- function(input, output, session) {
     create_header_list(input)
     header_list_reactive()
     
-    html_output <- getClosereadPage()
+    quarto_text <- generate_Closeread_Quarto_doc(narration_df_reactive(), 
+                                                    stickies_df, 
+                                                    header_list)
+    
+    html_output <- getClosereadPage(quarto_text, "closeread_doc", 800, 800)
     
     html_output    
     
   })
 
   
-  getClosereadPage <- function() {
+
+  getClosereadPage <- function(quarto_text, save_page_name = "closeread_doc", width, height) {
     
-    #quarto_text <- generate_Closeread_Quarto_doc(narration_df, stickies_df, header_list)
-    quarto_text <- generate_Closeread_Quarto_doc(narration_df_reactive(), 
-                                                 stickies_df, 
-                                                 header_list)
-    
-    
-    writeLines(quarto_text, "closeread_doc.qmd")
+    writeLines(quarto_text, paste0(save_page_name, ".qmd"))
     
     # Adding a one second delay to make sure the file is down being written to before rendering
     # If this is not included, sometimes the .html rendering file is missing content
     # This is a pretty ugly solution, would be great if there is a better one
     Sys.sleep(1)  
     
-    quarto_render("closeread_doc.qmd")
+    quarto_render(paste0(save_page_name, ".qmd"))
     
     # could perhaps alternatively use addResourcePath() to include _extensions directory
     temp_quarto_dir <- paste(sample(letters, 20, replace = TRUE), collapse = "")
     addResourcePath(temp_quarto_dir, getwd())
-
+    
     closeread_html <- tags$iframe(
-      src=paste0(temp_quarto_dir, "/", "closeread_doc.html"),
-      width=800, height=800)
+      src=paste0(temp_quarto_dir, "/", save_page_name, ".html"),
+      width=width, height=height)
     
     closeread_html
     
   }
+  
+  
+  
+  # When HTML tab is entered run this code
+  output$PreviewOutput <- renderUI({
+    
+    # # if no narrations have been created yet, can't render the HTML document
+    # if (nrow(narration_df) == 0) {
+    #   validate(
+    #     need((nrow(narration_df) != 0), 
+    #          message = "\n\nYou need to first add narrations before you can generate an HTML document")
+    #   )
+    # }
+    
+    
+    preview_header_list <- create_header_list(input)   #list(layout = "sidebar-left", narrative_background_color_overlay = "gray")
+    
+
+    preview_narration_df <- data.frame(sticky = input$NarrationSticky,
+                                       text = input$NarrationText,
+                                       options = get_narration_options())
+    
+    preview_sticky_df <- subset(stickies_df, name == preview_narration_df$sticky)
+  
+    quarto_preview <- generate_Closeread_Quarto_doc(preview_narration_df, preview_sticky_df, preview_header_list)
+    
+    html_output <- getClosereadPage(quarto_preview, "preview", 500, 500)
+    
+    html_output    
+    
+  })
+  
+  
+  
+  
+  
+  
+  
+  
   
     
   # Code to download the Quarto and HTML documents
@@ -648,13 +746,20 @@ server <- function(input, output, session) {
     content = function(file) {
       
       # create the close read html document
-      getClosereadPage()
+          quarto_text <- generate_Closeread_Quarto_doc(narration_df_reactive(), 
+                                                    stickies_df, 
+                                                    header_list)
+    
+    html_output <- getClosereadPage(quarto_text, "closeread_doc", 800, 800)
       
       file.copy("closeread_doc.html", file)
     }
   )
   
 
+
+  
+  
   
   
 }   # closing brace for the server function 
