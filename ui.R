@@ -11,6 +11,7 @@ source("UIs/display_html_panel.R")
 
 ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage( 
   
+  shinyjs::useShinyjs(),
   
   navset_tab(id = "MainMenu",
              

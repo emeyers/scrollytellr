@@ -7,6 +7,8 @@ display_quarto_doc <- function(input, output, session) {
   
   output$DisplayQuartoDoc <- renderUI({ 
     
+    stickies_df_reactive()
+    narration_df_reactive()
     
     # if no narrations have been created yet, can't render the Quarto document
     if (nrow(narration_df) == 0) {

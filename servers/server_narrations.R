@@ -59,11 +59,19 @@ add_narrations_button_pressed <- function(input, output, session) {
     curr_narration_df <- data.frame(sticky = input$NarrationSticky,
                                     text = input$NarrationText,
                                     options = get_narration_options(input))
-    #options = input$NarrationStickyOptions)
+    
     
     # clear the text once the narration has been added
     updateTextInput(session, "NarrationText", value = "") 
     
+    # reset all the narration/sticky options
+    shinyjs::reset("NarrationOptionsHighlightLines")
+    shinyjs::reset("NarrationOptionsPanHorizontal")
+    shinyjs::reset("NarrationOptionsPanVertical")
+    
+    # shinyjs::reset() doesn't work with shinyWidgets
+    shinyWidgets::updateSliderTextInput(session, "NarrationOptionsScale", selected = 1) 
+
     narration_df <<- rbind(narration_df, curr_narration_df)
     
     # update the visual display of the table  
@@ -114,6 +122,22 @@ delete_narration_dt_rows <- function(input, output, session) {
 }
 
 
+# Function for when a cell in the narration data table/frame is edited
+edit_narration_dt_rows <- function(input, output, session) {
+  
+  observeEvent(input$ShowNarrationsDT_cell_edit, {
+    
+    row  <- input$ShowNarrationsDT_cell_edit$row
+    clmn <- input$ShowNarrationsDT_cell_edit$col + 1  # not sure why I need to add 1 here, but ok
+    narration_df[row, clmn] <<- input$ShowNarrationsDT_cell_edit$value
+    
+    narration_df_reactive(narration_df)
+    
+  })
+  
+}
+
+
 
 
 preview_narration_image <- function(input, output, session) {
@@ -143,8 +167,6 @@ preview_narration_image <- function(input, output, session) {
     
     html_output <- getClosereadPage(quarto_preview, "preview", 500, 500)
     
-    print("blah")
-    
     html_output    
     
   })
@@ -156,33 +178,41 @@ preview_narration_image <- function(input, output, session) {
  
 
 
-
-
-
-# Function for when a cell in the narration data table/frame is edited
-edit_narration_dt_rows <- function(input, output, session) {
+select_lines_to_highlight <- function(input, output, session) {
   
-  observeEvent(input$ShowNarrationsDT_cell_edit, {
+
+  output$SelectLinesToHighlight <- renderUI({
     
-    row  <- input$ShowNarrationsDT_cell_edit$row
-    clmn <- input$ShowNarrationsDT_cell_edit$col + 1  # not sure why I need to add 1 here, but ok
-    narration_df[row, clmn] <<- input$ShowNarrationsDT_cell_edit$value
+    narration_df_reactive()
+
+    selected_sticky <- subset(stickies_df_reactive(), name == input$NarrationSticky) 
     
-    narration_df_reactive(narration_df)
+    if (selected_sticky$type  == "Text") {
+      
+      sticky_text_lines <- unlist(strsplit(subset(stickies_df_reactive(), name == selected_sticky$name)$text, split = "\n"))
+      
+      # If every line of the text is unique, select lines to highlight based on the full text of the line
+      # Otherwise select the line based on the line number
+      if (length(unique(sticky_text_lines)) == length(sticky_text_lines)) {
+        hight_line_choices <- sticky_text_lines
+      } else {
+        hight_line_choices <- seq(1, length(sticky_text_lines))
+      }
+
+      
+      selectizeInput("NarrationOptionsHighlightLines", "Highlight lines" , 
+                     choices = hight_line_choices, multiple = TRUE)
+
+    }
+
     
-    print(narration_df)
+    # do I need to add an else for not text choices?
+    
     
   })
   
+  
 }
-
-
-
-
-
-
-
-
 
 
 

@@ -58,8 +58,7 @@ add_narrations_panel <- nav_panel(title = "Add Narration", {
                                  
                                  # Need to make this conditional depending on the type of sticky
                                  
-                                 # For images...
-                                 
+                                 uiOutput("SelectLinesToHighlight"),
                                  
                                  shinyWidgets::sliderTextInput("NarrationOptionsScale", "Scale",
                                                                choices=c(0, .25, .5, .75, 1, 1.5, 2, 2.5, seq(3, 10)),
@@ -70,6 +69,8 @@ add_narrations_panel <- nav_panel(title = "Add Narration", {
                                  
                                  sliderInput(inputId = "NarrationOptionsPanVertical", 
                                              label = "Pan vertical", min = -100, max = 100, value = 0)
+                                 
+                                 
                                  
                             ),
                             

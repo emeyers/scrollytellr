@@ -26,7 +26,8 @@ server <- function(input, output, session) {
   reorder_narration_dt_rows(input, output, session)
   delete_narration_dt_rows(input, output, session)
   edit_narration_dt_rows(input, output, session)
-  preview_narration_image(input, output, session) 
+  select_lines_to_highlight(input, output, session)  
+  preview_narration_image(input, output, session)
   
   
   # sourced from server_render_quarto

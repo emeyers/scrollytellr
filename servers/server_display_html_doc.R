@@ -5,10 +5,10 @@ display_html_doc <- function(input, output, session) {
   
   
   output$HTMLOutput <- renderUI({
-    #output$ClosereadOutput <- renderUI({
-    
+  
     # make sure the html document is regenerated every time the narration_df changes
-    #narration_df_reactive() 
+    narration_df_reactive() 
+    stickies_df_reactive() 
     
     # if no narrations have been created yet, can't render the HTML document
     if (nrow(narration_df) == 0) {

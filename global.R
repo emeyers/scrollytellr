@@ -5,6 +5,7 @@ narration_df <- data.frame()
 header_list <- list()
 
 narration_df_reactive <- reactiveVal(narration_df)
+stickies_df_reactive <- reactiveVal(stickies_df)
 header_list_reactive <- reactiveVal(header_list)
 
 
@@ -41,9 +42,49 @@ create_header_list <- function(input) {
 # Helper function to get a string of the narration options
 get_narration_options <- function(input) {
   
-  options_string <- paste0("pan-to=", input$NarrationOptionsPanHorizontal, "%,",
-                           input$NarrationOptionsPanVertical, "%",
-                           " scale-by=", input$NarrationOptionsScale)
+
+  options_string <- ""
+  
+  
+  # Panning
+  if ((input$NarrationOptionsPanHorizontal != 0) || (input$NarrationOptionsPanVertical != 0)) {
+    options_string <- paste0("pan-to=", input$NarrationOptionsPanHorizontal, "%,",
+                             input$NarrationOptionsPanVertical, "%")
+  }
+
+                           
+  # Scaling (zooming) on the image
+  if (input$NarrationOptionsScale != 1) {
+    options_string <- paste0(options_string, " scale-by=", input$NarrationOptionsScale)
+  }
+  
+  
+  # Highlighting line numbers 
+  if (!(is.null(input$NarrationOptionsHighlightLines))) {
+    
+    selected_sticky <- subset(stickies_df_reactive(), name == input$NarrationSticky) 
+    
+    # will be a problem if two lines are the same :(
+    all_lines <- unlist(strsplit(selected_sticky$text, split = "\n"))
+    all_highlights <- input$NarrationOptionsHighlightLines
+
+    # if multiple lines of the sticky are the same, need to highlight based on line number
+    if (length(unique(all_lines)) != length(all_lines)) {
+      all_lines <- as.character(seq(1, length(all_lines)))
+    }
+    
+    highlight_line_numbers <- c()
+    for (iLine in seq_along(all_lines)) {
+      if (all_lines[iLine] %in% all_highlights) {
+        highlight_line_numbers <- c(highlight_line_numbers, iLine)
+      }
+    }
+    
+    highlight_options <- paste0("highlight=", "'", paste0(highlight_line_numbers, collapse = ","), "'")
+    options_string <- paste(highlight_options, options_string)
+  
+  }
+  
   
   options_string
   
