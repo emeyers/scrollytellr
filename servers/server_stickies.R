@@ -69,8 +69,6 @@ add_sticky_button_pressed <- function(input, output, session) {
     }
     
     
-    print(input$StickyShowCode)
-  
     # if the showcode checkbox is clicked for R code, add options to show the code
     if (input$StickyShowCode) {
       sticky_options <- "echo = TRUE"  #"showcode"
