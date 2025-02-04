@@ -187,7 +187,10 @@ select_lines_to_highlight <- function(input, output, session) {
 
     selected_sticky <- subset(stickies_df_reactive(), name == input$NarrationSticky) 
     
-    if (selected_sticky$type  == "Text") {
+    if ((selected_sticky$type  == "Text") || 
+        # ( (selected_sticky$type  == "R Code") && (selected_sticky$options == "showcode")) ) {
+        ( (selected_sticky$type  == "R Code") && (gsub(" ", "", selected_sticky$options) == "echo=TRUE")) ) {
+    
       
       sticky_text_lines <- unlist(strsplit(subset(stickies_df_reactive(), name == selected_sticky$name)$text, split = "\n"))
       

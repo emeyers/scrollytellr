@@ -27,12 +27,23 @@ add_stickies_panel <- nav_panel(title = "Add Sticky", {
         
         # sticky that is a textbox or r code 
         conditionalPanel( 
-          condition = "input.StickyType == 'Text' || input.StickyType == 'R Code'",
+          condition = "input.StickyType == 'Text'",
           textAreaInput(
-            inputId = "StickyContent",
-            label = "Sticky Conent",
+            inputId = "StickyTextContent",
+            label = "Sticky Text",
             height = "250px",
-            placeholder = "Add your sticky content here")
+            placeholder = "Add your sticky text here")
+        ),
+        
+        
+        conditionalPanel( 
+          condition = "input.StickyType == 'R Code'",
+          textAreaInput(
+            inputId = "StickyRContent",
+            label = "Sticky Code",
+            height = "200px",
+            placeholder = "Add your sticky code here"),
+          checkboxInput("StickyShowCode", "Show code")
         ),
         
         

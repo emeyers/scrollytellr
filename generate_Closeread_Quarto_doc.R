@@ -74,13 +74,14 @@ generate_stickies <- function(stickies_df) {
   
   for (i in 1:nrow(stickies_df)) {
     
-    print(stickies_df$name[i])
-    print(stickies_df$type[i])
-    print(stickies_df$text[i])
+    # print(stickies_df$name[i])
+    # print(stickies_df$type[i])
+    # print(stickies_df$text[i])
     
     curr_sticky_text <- generate_one_sticky(stickies_df$name[i], 
                                             stickies_df$type[i], 
-                                            stickies_df$text[i])
+                                            stickies_df$text[i],
+                                            stickies_df$options[i])
     
     
     all_sticky_text <- paste0(all_sticky_text, "\n\n", curr_sticky_text)
@@ -97,7 +98,7 @@ generate_stickies <- function(stickies_df) {
 
 
 # helper function to generate one sticky
-generate_one_sticky <- function(sticky_name, sticky_type, sticky_text) {
+generate_one_sticky <- function(sticky_name, sticky_type, sticky_text, sticky_options = NULL) {
   
   if (sticky_type == "Image") {
     
@@ -115,9 +116,22 @@ generate_one_sticky <- function(sticky_name, sticky_type, sticky_text) {
     
   } else if ( (sticky_type == "RCode") | (sticky_type == "R Code")) {
     
-    sticky_content <- paste0("```{r}\n",
-                             sticky_text,
-                             "\n```")
+    
+    if (!is.null(sticky_options)) {  # &  (tolower(sticky_options) == "showcode" || tolower(sticky_options) == "show code")) {
+      
+      #sticky_content <- paste0("```{r, echo = TRUE}\n",
+      sticky_content <- paste0("```{r, ", sticky_options, "}\n",
+                               sticky_text,
+                               "\n```")
+      
+    } else {
+      
+      sticky_content <- paste0("```{r}\n",
+                               sticky_text,
+                               "\n```")
+    }
+
+    
   } else {
     
     stop(paste(sticky_type, 'is an invalid type. The sticky_type must be set to "Image", "Text", or "RCode" '))

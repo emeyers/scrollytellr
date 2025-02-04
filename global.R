@@ -102,7 +102,7 @@ getClosereadPage <- function(quarto_text, save_page_name = "closeread_doc", widt
   # Adding a one second delay to make sure the file is down being written to before rendering
   # If this is not included, sometimes the .html rendering file is missing content
   # This is a pretty ugly solution, would be great if there is a better one
-  Sys.sleep(1)  
+  Sys.sleep(.25)  #  Sys.sleep(1) 
   
   quarto_render(paste0(save_page_name, ".qmd"))
   

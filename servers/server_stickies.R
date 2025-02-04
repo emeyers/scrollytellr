@@ -56,17 +56,35 @@ add_sticky_button_pressed <- function(input, output, session) {
       curr_text <- input$ImageUpload$datapath
       
       
-    } else {  # not an image (i.e., R code or text)
+    } else if (input$StickyType == "Text") { 
       
-      curr_text <- input$StickyContent
-      updateTextInput(session, "StickyContent", value = "")   # Clear the text once the stikcy has been added
+      curr_text <- input$StickyTextContent
+      updateTextInput(session, "StickyTextContent", value = "")   # Clear the text once the stikcy has been added
+  
+    } else if (input$StickyType == "R Code") {
+      
+      curr_text <- input$StickyRContent
+      updateTextInput(session, "StickyRContent", value = "")   # Clear the text once the stikcy has been added
       
     }
     
     
+    print(input$StickyShowCode)
+  
+    # if the showcode checkbox is clicked for R code, add options to show the code
+    if (input$StickyShowCode) {
+      sticky_options <- "echo = TRUE"  #"showcode"
+    } else {
+      sticky_options <- ""
+    }
+    updateCheckboxInput(session, "StickyOptions", value = FALSE)   # Clear the text once the stikcy has been added
+    
+    
+    
     curr_sticky_df <- data.frame(name = input$StickyName, 
                                  type = input$StickyType,
-                                 text = curr_text)
+                                 text = curr_text,
+                                 options = sticky_options)
     
     
     # Add to global variable stickies_df

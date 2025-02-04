@@ -1,5 +1,20 @@
 
 
+# include the shiny package
+# seems like I need to load the libraries here otherwise I'm getting an error
+# if they are only loaded in app.R
+library(shiny)
+library(htmltools)
+library(bslib)
+library(quarto)
+library(shinyAce)  # for displaying the Quarto script
+library(shinyalert)  # for popup messages
+library(shinyjs) # for resetting inputs to their default values
+library(DT)  # to show data tables that are editable, etc.
+library(colourpicker)
+
+
+
 # source the UI components
 source("UIs/add_stickies_panel.R")
 source("UIs/add_narrations_panel.R")
