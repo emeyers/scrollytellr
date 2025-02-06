@@ -50,10 +50,24 @@ add_sticky_button_pressed <- function(input, output, session) {
                message = "An image must be uploaded prior to adding the sticky.")
         )
         
-        
+      } # end checking that an image was uploaded
+      
+      
+      # 1. Create a directory (if it doesn't exist) to store images.
+      image_dir <- "images"  #file.path(tempdir(), "images") # Use tempdir() for portability
+      if (!dir.exists(image_dir)) {
+        dir.create(image_dir)
       }
       
-      curr_text <- input$ImageUpload$datapath
+      # 2. Copy the uploaded image to the image directory
+      image_path_server <- input$ImageUpload$datapath
+      new_image_path <- file.path(image_dir, input$ImageUpload$name) # Use original filename
+      file.copy(image_path_server, new_image_path, overwrite = TRUE)
+      
+      #addResourcePath("images", new_image_path)
+      
+      #curr_text <- file.path("images", input$ImageUpload$name)  #input$ImageUpload$datapath
+      curr_text <- new_image_path
       
       
     } else if (input$StickyType == "Text") { 
