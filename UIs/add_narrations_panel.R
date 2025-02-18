@@ -22,6 +22,7 @@ add_narrations_panel <- nav_panel(title = "Add Narration", {
           inputId = "NarrationText",
           label = "Narration Text",
           height = "250px",
+          width = "100%",
           placeholder = "Add your narration text here"),
         
         # Additional sticky selection options

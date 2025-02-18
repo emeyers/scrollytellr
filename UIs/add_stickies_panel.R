@@ -32,6 +32,7 @@ add_stickies_panel <- nav_panel(title = "Add Sticky", {
             inputId = "StickyTextContent",
             label = "Sticky Text",
             height = "250px",
+            width = "100%",
             placeholder = "Add your sticky text here")
         ),
         
@@ -42,6 +43,7 @@ add_stickies_panel <- nav_panel(title = "Add Sticky", {
             inputId = "StickyRContent",
             label = "Sticky Code",
             height = "200px",
+            width = "100%",
             placeholder = "Add your sticky code here"),
           checkboxInput("StickyShowCode", "Show code")
         ),
