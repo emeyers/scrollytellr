@@ -1,0 +1,93 @@
+---
+format:
+  closeread-html:
+    embed-resources: true
+    cr-section:
+      layout: "sidebar-left"
+    cr-style:
+       narrative-background-color-overlay: '#FF0000'
+       narrative-background-color-sidebar: '#FF0000'
+       narrative-text-color-overlay: '#FFFFFF'
+       narrative-text-color-sidebar: '#FFFFFF'
+       section-background-color: '#FCD041'
+       narrative-font-family: ''
+       poem-font-family: ''
+       narrative-font-size: '12pt'
+---
+
+
+:::{.cr-section}
+
+
+The scrollytellr app makes it easy to create scrolly telling webpages through a shiny graphical user interface [@cr-sticky_welcome_text]  
+
+
+This tutorial will show you how to use the app to create a create scrolly telling webpage [@cr-sticky_welcome_text]  
+
+
+To start, you can create stickies in the "Add stickies" tab [@cr-sticky_image] 
+
+
+In particular, you give the sticky a name [@cr-sticky_image]{pan-to=100%,80% scale-by=3} 
+
+
+Specify the type of sticky (text, image, or R code) [@cr-sticky_image]{pan-to=100%,-20% scale-by=3} 
+
+
+And add the sticky content, 
+which in this example is the text of the Shelley poem Ozymandias [@cr-sticky_image]{pan-to=100%,-60% scale-by=3} 
+
+
+Next we can add narrations in the "Add Narration" tab [@cr-narration_image] 
+
+
+We select the sticky we want to add a narration to [@cr-narration_image]{pan-to=100%,60% scale-by=3} 
+
+
+We then add the narration text [@cr-narration_image]{pan-to=100%,60% scale-by=3} 
+
+
+We can also add narration options [@cr-narration_image]{pan-to=100%,-77% scale-by=3} 
+
+
+For example, we can add the option to highlight a line of text [@cr-narration_image]{pan-to=100%,-77% scale-by=3} 
+
+
+We can also set the appearance in the "Set Appearance" tab [@cr-html_image]{pan-to=40%,100% scale-by=3} 
+
+
+We can view the quarto document in the "Quarto Document" tab [@cr-html_image]{pan-to=-20%,100% scale-by=3} 
+
+
+And we can view the full scrolly telling webpage output in the "HTML output" tab [@cr-html_image]{pan-to=-75%,100% scale-by=3} 
+
+When we view HTML output we can see the whole generated webpage [@cr-html_image] 
+
+
+Finally we can use the "Downloads" menu, to download the Quarto Closeread document (in case we want to edit it further manually), and download the html webpage from this meu as well. [@cr-html_image]{pan-to=-100%,100% scale-by=3} 
+
+
+We hope you find the scrollytellr app useful! [@cr-html_image] 
+
+
+We have already found it useful ourselves, as evidenced by the fact that we created this tutorial using the scrollytellr app :)
+
+
+:::{#cr-sticky_welcome_text}
+| Welcome to the scrollingtellr app tutorial!
+:::
+
+
+:::{#cr-sticky_image}
+![](images/stickies.png)
+:::
+
+:::{#cr-narration_image}
+![](images/narrations.png)
+:::
+
+:::{#cr-html_image}
+![](images/html_output.png)
+:::
+
+:::
