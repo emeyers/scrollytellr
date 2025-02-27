@@ -69,7 +69,9 @@ add_narrations_panel <- nav_panel(title = "Add Narration", {
                                              label = "Pan horizontal", min = -100, max = 100, value = 0),
                                  
                                  sliderInput(inputId = "NarrationOptionsPanVertical", 
-                                             label = "Pan vertical", min = -100, max = 100, value = 0)
+                                             label = "Pan vertical", min = -100, max = 100, value = 0),
+                                 
+                                 actionButton(inputId = "NarrationOptionsPreview",  "Preview narration")
                                  
                                  
                                  

@@ -154,22 +154,35 @@ preview_narration_image <- function(input, output, session) {
     # }
     
     
-    preview_header_list <- create_header_list(input)   #list(layout = "sidebar-left", narrative_background_color_overlay = "gray")
+    
+    # adding this check has the bonus feature of making sure the eventReactive for generating the HTML preview is always called
+    if (input$NarrationOptionsPreview == 0) {
+      return("Press the preview button to see what this narration element will look like")
+    }
     
     
-    preview_narration_df <- data.frame(sticky = input$NarrationSticky,
-                                       text = input$NarrationText,
-                                       options = get_narration_options(input))
+    get_html_output <- eventReactive(input$NarrationOptionsPreview, {
+
+      preview_header_list <- create_header_list(input)   #list(layout = "sidebar-left", narrative_background_color_overlay = "gray")
+
+
+      preview_narration_df <- data.frame(sticky = input$NarrationSticky,
+                                         text = input$NarrationText,
+                                         options = get_narration_options(input))
+
+      preview_sticky_df <- subset(stickies_df, name == preview_narration_df$sticky)
+
+      quarto_preview <- generate_Closeread_Quarto_doc(preview_narration_df, preview_sticky_df, preview_header_list)
+
+      html_output <- getClosereadPage(quarto_preview, "preview", 500, 500)
+
+      html_output
+
+    })
     
-    preview_sticky_df <- subset(stickies_df, name == preview_narration_df$sticky)
+    html_output <- get_html_output()
     
-    quarto_preview <- generate_Closeread_Quarto_doc(preview_narration_df, preview_sticky_df, preview_header_list)
-    
-    html_output <- getClosereadPage(quarto_preview, "preview", 500, 500)
-    
-    html_output    
-    
-  })
+  })  # end renderUI
   
   
   
