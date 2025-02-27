@@ -78,7 +78,23 @@ add_sticky_button_pressed <- function(input, output, session) {
     } else if (input$StickyType == "R Code") {
       
       curr_text <- input$StickyRContent
-      updateTextInput(session, "StickyRContent", value = "")   # Clear the text once the stikcy has been added
+      
+      # Make sure the R code is valid
+      tryCatch({
+        #parse(text = curr_text)
+        eval(parse(text = curr_text))  # a little more dangerous, but will catch things like trying to use a library that isn't installed
+      }, error = function(e) {
+        error_message = gsub("<text>:2:0: ", "", e$message)
+        shinyalert("Invalid R code", 
+                   paste("The R code you entered is invalid. Please check it and try again.\n\n\nError Message:\n", error_message), 
+                   type = "warning")
+        validate(
+          need(FALSE, 
+               message = "The R code you entered is not valid. Please check it and try again.")
+        )
+      })
+      
+      updateTextInput(session, "StickyRContent", value = "")   # Clear the text once the sticky has been added
       
     }
     
