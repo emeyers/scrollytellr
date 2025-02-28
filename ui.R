@@ -22,6 +22,7 @@ source("UIs/set_appearance_panel.R")
 source("UIs/display_quarto_panel.R")
 source("UIs/display_html_panel.R")
 
+source("UIs/save_load_panel.R")
 
 
 ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage( 
@@ -38,9 +39,11 @@ ui <- page_fillable( #page_fluid(  # page_navbar(   # fluidPage(
              
              display_quarto_panel,
              
-             display_html_panel
+             display_html_panel,
              
-             # Downloads menue will be added dynamically when narration_df is not an empty data frame
+             save_load_panel
+             
+             # Downloads menu will be added dynamically when narration_df is not an empty data frame
              
   )
   

@@ -119,7 +119,7 @@ add_sticky_button_pressed <- function(input, output, session) {
     stickies_df <<- rbind(stickies_df, curr_sticky_df)
     stickies_df_reactive <- stickies_df_reactive(stickies_df)
     
-    # update the narration tab so this sticky is avaliable to select
+    # update the narration tab so this sticky is available to select
     updateSelectInput(session, "NarrationSticky",
                       label = "Select Sticky",
                       choices = stickies_df$name,

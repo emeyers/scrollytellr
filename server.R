@@ -11,6 +11,7 @@ source("servers/server_display_quarto_doc.R")
 source("servers/server_display_html_doc.R")
 source("servers/server_downloads.R")
 
+source("servers/server_save_load_state.R")
 
 
 server <- function(input, output, session) {
@@ -43,8 +44,10 @@ server <- function(input, output, session) {
   download_quarto(input, output, session)
   download_html(input, output, session)
   
-  
-
+  # for saving and loading the app state
+  reset_state_button_pressed(input, output, session)
+  save_state_button_pressed(input, output, session)
+  load_state_button_pressed(input, output, session)
   
 }   # closing brace for the server function 
 

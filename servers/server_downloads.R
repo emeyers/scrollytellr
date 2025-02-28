@@ -13,7 +13,9 @@ add_downloads_menu <- function(input, output, session) {
     if (nrow(narration_df) > 0) {
       
       nav_insert(
-        "MainMenu", target = "HTML output",
+        "MainMenu", 
+        #target = "HTML output",
+        target = "Save/Load",
         nav_menu("Downloads", 
                  nav_spacer(),
                  nav_item(downloadButton("downloadQuarto", "Download Quarto Document")),
